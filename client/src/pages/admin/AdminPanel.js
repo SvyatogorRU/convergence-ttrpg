@@ -37,12 +37,6 @@ const AdminPanel = () => {
       path: '/admin/whitelist'
     },
     {
-      title: 'Управление справочниками',
-      description: 'Создание и редактирование справочников игры: навыки, предметы, заклинания и др.',
-      icon: <StorageIcon fontSize="large" />,
-      path: '/admin/reference'
-    },
-    {
       title: 'Настройки системы',
       description: 'Глобальные настройки и параметры приложения',
       icon: <SettingsIcon fontSize="large" />,

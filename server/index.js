@@ -42,7 +42,7 @@ app.use('/api/users', require('./routes/users.routes'));
 app.use('/api/characters', require('./routes/characters.routes'));
 app.use('/api/formulas', require('./routes/formulas.routes'));
 app.use('/api/campaigns', require('./routes/campaigns.routes'));
-app.use('/api/reference', require('./routes/reference.routes')); // Новый маршрут для справочников
+
 
 // Обработка ошибок
 app.use((err, req, res, next) => {

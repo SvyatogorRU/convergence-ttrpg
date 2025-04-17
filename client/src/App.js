@@ -24,7 +24,6 @@ import Dashboard from './pages/Dashboard';
 import AdminPanel from './pages/admin/AdminPanel';
 import UserManagement from './pages/admin/UserManagement';
 import WhitelistManagement from './pages/admin/WhitelistManagement';
-import ReferenceManagement from './pages/admin/ReferenceManagement';
 
 // Страницы персонажей
 import CharactersList from './pages/characters/CharactersList';
@@ -117,13 +116,7 @@ function App() {
                   <WhitelistManagement />
                 </RoleRoute>
               } />
-              {/* Новый маршрут для управления справочниками */}
-              <Route path="admin/reference" element={
-                <RoleRoute allowedRoles={['admin']}>
-                  <ReferenceManagement />
-                </RoleRoute>
-              } />
-            </Route>
+             
             
             {/* Редирект для неизвестных маршрутов */}
             <Route path="*" element={<Navigate to="/" replace />} />

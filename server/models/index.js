@@ -33,9 +33,6 @@ const db = {
   CharacterKnowledge: require('./characterKnowledge.model')(sequelize, Sequelize),
   CharacterInventory: require('./characterInventory.model')(sequelize, Sequelize),
   CharacterNote: require('./characterNote.model')(sequelize, Sequelize),
-  // Добавляем новые модели справочников
-  ReferenceItem: require('./referenceItem.model')(sequelize, Sequelize),
-  ReferencePermission: require('./referencePermission.model')(sequelize, Sequelize)
 };
 
 // Определение связей
@@ -72,35 +69,6 @@ db.WhiteList.belongsTo(db.User, {
 db.User.hasMany(db.WhiteList, { 
   foreignKey: 'addedBy', 
   as: 'AddedWhitelistEntries' 
-});
-
-// Связи для справочников
-db.User.hasMany(db.ReferenceItem, {
-  foreignKey: 'createdBy',
-  as: 'CreatedReferenceItems'
-});
-db.ReferenceItem.belongsTo(db.User, {
-  foreignKey: 'createdBy',
-  as: 'Creator'
-});
-
-// Связи для прав доступа к справочникам
-db.User.hasMany(db.ReferencePermission, {
-  foreignKey: 'userId',
-  as: 'ReferencePermissions'
-});
-db.ReferencePermission.belongsTo(db.User, {
-  foreignKey: 'userId',
-  as: 'User'
-});
-
-db.User.hasMany(db.ReferencePermission, {
-  foreignKey: 'grantedBy',
-  as: 'GrantedPermissions'
-});
-db.ReferencePermission.belongsTo(db.User, {
-  foreignKey: 'grantedBy',
-  as: 'Grantor'
 });
 
 module.exports = db;

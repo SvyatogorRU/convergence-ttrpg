@@ -9,8 +9,6 @@ import {
 } from '@mui/material';
 import { characterService } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
-import CharacterCard from '../../components/character/CharacterCard';
-import CharacterEditDialog from '../../components/character/CharacterEditDialog';
 
 const CharacterView = () => {
   const { id } = useParams();

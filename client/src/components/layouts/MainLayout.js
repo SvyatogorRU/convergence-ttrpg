@@ -76,7 +76,6 @@ const MainLayout = () => {
         { text: 'Главная панель', path: '/admin' },
         { text: 'Управление пользователями', path: '/admin/users' },
         { text: 'Управление белым списком', path: '/admin/whitelist' },
-        { text: 'Управление справочниками', path: '/admin/reference' } // Новый пункт меню
       ] 
     }
   ] : [];
