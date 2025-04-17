@@ -65,12 +65,23 @@ const MainLayout = () => {
     { text: 'База знаний', icon: <BookIcon />, path: '/knowledge' }
   ];
 
+  
+
   // Добавляем пункты админ-меню только для администраторов
-  if (currentUser && currentUser.role === 'admin') {
-    menuItems.push(
-      { text: 'Администрирование', icon: <AdminIcon />, path: '/admin' }
-    );
+  const adminMenuItems = currentUser && currentUser.role === 'admin' ? [
+  { 
+    text: 'Администрирование', 
+    icon: <AdminIcon />, 
+    path: '/admin',
+    subItems: [
+      { text: 'Главная панель', path: '/admin' },
+      { text: 'Управление пользователями', path: '/admin/users' },
+      { text: 'Управление белым списком', path: '/admin/whitelist' }
+    ] 
   }
+] : [];
+  
+  
 
   const drawer = (
     <div>

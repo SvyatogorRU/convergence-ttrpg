@@ -35,25 +35,8 @@ router.get('/me', auth, async (req, res) => {
   }
 });
 
-// Получение конкретного пользователя (только для админов и мастеров)
-router.get('/:id', auth, checkRole('admin', 'gamemaster'), async (req, res) => {
-  try {
-    const user = await User.findByPk(req.params.id, {
-      attributes: { exclude: ['password'] }
-    });
-    
-    if (!user) {
-      return res.status(404).json({ message: 'Пользователь не найден' });
-    }
-    
-    res.json(user);
-  } catch (error) {
-    console.error('Ошибка при получении пользователя:', error);
-    res.status(500).json({ message: 'Ошибка сервера' });
-  }
-});
-
-// Управление белым списком (только для админов)
+// *** МАРШРУТЫ БЕЛОГО СПИСКА ***
+// Управление белым списком (получение списка) - только для админов
 router.get('/whitelist', auth, checkRole('admin'), async (req, res) => {
   try {
     const whitelist = await WhiteList.findAll({
@@ -85,11 +68,25 @@ router.post('/whitelist', auth, checkRole('admin'), async (req, res) => {
       return res.status(400).json({ message: 'Этот Discord ID уже в белом списке' });
     }
     
+    // Проверка и обработка даты истечения
+    let validExpirationDate = null;
+    if (expirationDate && expirationDate !== 'Invalid date') {
+      try {
+        // Проверка на валидность даты
+        const dateObj = new Date(expirationDate);
+        if (!isNaN(dateObj.getTime())) {
+          validExpirationDate = dateObj;
+        }
+      } catch (err) {
+        console.log('Ошибка при обработке даты:', err);
+      }
+    }
+    
     const whitelistEntry = await WhiteList.create({
       discordId,
       accessLevel,
       notes,
-      expirationDate,
+      expirationDate: validExpirationDate,
       addedBy: req.user.id,
       isActive: true
     });
@@ -113,10 +110,27 @@ router.put('/whitelist/:id', auth, checkRole('admin'), async (req, res) => {
       return res.status(404).json({ message: 'Запись в белом списке не найдена' });
     }
     
+    // Обработка даты истечения
+    let validExpirationDate = whitelistEntry.expirationDate;
+    if (expirationDate !== undefined) {
+      if (expirationDate === null || expirationDate === '') {
+        validExpirationDate = null;
+      } else if (expirationDate !== 'Invalid date') {
+        try {
+          const dateObj = new Date(expirationDate);
+          if (!isNaN(dateObj.getTime())) {
+            validExpirationDate = dateObj;
+          }
+        } catch (err) {
+          console.log('Ошибка при обработке даты:', err);
+        }
+      }
+    }
+    
     // Обновление данных
     whitelistEntry.accessLevel = accessLevel || whitelistEntry.accessLevel;
     whitelistEntry.notes = notes !== undefined ? notes : whitelistEntry.notes;
-    whitelistEntry.expirationDate = expirationDate || whitelistEntry.expirationDate;
+    whitelistEntry.expirationDate = validExpirationDate;
     whitelistEntry.isActive = isActive !== undefined ? isActive : whitelistEntry.isActive;
     
     await whitelistEntry.save();
@@ -148,6 +162,7 @@ router.delete('/whitelist/:id', auth, checkRole('admin'), async (req, res) => {
   }
 });
 
+// *** МАРШРУТЫ УПРАВЛЕНИЯ ПОЛЬЗОВАТЕЛЯМИ ***
 // Изменение роли пользователя (только для админов)
 router.put('/:id/role', auth, checkRole('admin'), async (req, res) => {
   try {
@@ -170,6 +185,51 @@ router.put('/:id/role', auth, checkRole('admin'), async (req, res) => {
     res.json({ message: 'Роль пользователя успешно обновлена' });
   } catch (error) {
     console.error('Ошибка при обновлении роли пользователя:', error);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+});
+
+// Изменение статуса активности пользователя (только для админов)
+router.put('/:id/status', auth, checkRole('admin'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isActive } = req.body;
+    
+    if (isActive === undefined) {
+      return res.status(400).json({ message: 'Параметр isActive не указан' });
+    }
+    
+    const user = await User.findByPk(id);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'Пользователь не найден' });
+    }
+    
+    user.isActive = isActive;
+    await user.save();
+    
+    res.json({ message: 'Статус пользователя успешно обновлен' });
+  } catch (error) {
+    console.error('Ошибка при обновлении статуса пользователя:', error);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+});
+
+// ВАЖНО: Этот маршрут должен быть в самом конце, чтобы другие маршруты /users/... обрабатывались правильно
+// Получение конкретного пользователя (только для админов и мастеров)
+router.get('/:id', auth, checkRole('admin', 'gamemaster'), async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id, {
+      attributes: { exclude: ['password'] }
+    });
+    
+    if (!user) {
+      return res.status(404).json({ message: 'Пользователь не найден' });
+    }
+    
+    res.json(user);
+  } catch (error) {
+    console.error('Ошибка при получении пользователя:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
   }
 });

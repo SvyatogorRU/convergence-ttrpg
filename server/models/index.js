@@ -52,4 +52,15 @@ db.CharacterSkill.belongsTo(db.Character);
 db.Character.belongsToMany(db.Knowledge, { through: db.CharacterKnowledge });
 db.Knowledge.belongsToMany(db.Character, { through: db.CharacterKnowledge });
 
+// Связь между WhiteList и User (кто добавил запись)
+db.WhiteList.belongsTo(db.User, { 
+  foreignKey: 'addedBy', 
+  as: 'AddedByUser' 
+});
+
+db.User.hasMany(db.WhiteList, { 
+  foreignKey: 'addedBy', 
+  as: 'AddedWhitelistEntries' 
+});
+
 module.exports = db;

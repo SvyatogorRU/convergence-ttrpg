@@ -71,7 +71,8 @@ const userService = {
   getAll: () => api.get('/users'),
   getMe: () => api.get('/users/me'),
   getById: (id) => api.get(`/users/${id}`),
-  updateRole: (id, role) => api.put(`/users/${id}/role`, { role })
+  updateRole: (id, role) => api.put(`/users/${id}/role`, { role }),
+  updateStatus: (id, isActive) => api.put(`/users/${id}/status`, { isActive })
 };
 
 const whitelistService = {

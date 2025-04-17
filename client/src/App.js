@@ -20,6 +20,11 @@ import AuthCallback from './pages/auth/AuthCallback';
 // Основные страницы
 import Dashboard from './pages/Dashboard';
 
+// Административные страницы
+import AdminPanel from './pages/admin/AdminPanel';
+import UserManagement from './pages/admin/UserManagement';
+import WhitelistManagement from './pages/admin/WhitelistManagement';
+
 // Заглушки для страниц (будут реализованы позже)
 const CharactersList = () => <div>Список персонажей (будет реализовано позже)</div>;
 const CharacterDetail = () => <div>Детали персонажа (будет реализовано позже)</div>;
@@ -27,9 +32,6 @@ const CampaignsList = () => <div>Список кампаний (будет ре�
 const CampaignDetail = () => <div>Детали кампании (будет реализовано позже)</div>;
 const FormulaCalculator = () => <div>Калькулятор формул (будет реализовано позже)</div>;
 const KnowledgeBase = () => <div>База знаний (будет реализовано позже)</div>;
-const AdminPanel = () => <div>Панель администратора (будет реализовано позже)</div>;
-const UserManagement = () => <div>Управление пользователями (будет реализовано позже)</div>;
-import WhitelistManagement from './pages/admin/WhitelistManagement';
 
 // Создание темы
 const theme = createTheme({
