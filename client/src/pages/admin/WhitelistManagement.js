@@ -5,17 +5,9 @@ import {
   Paper, Table, TableBody, TableCell, TableContainer, 
   TableHead, TableRow, IconButton, FormControl, 
   InputLabel, Select, MenuItem, Alert, Snackbar,
-  CircularProgress, FormControlLabel, Switch, Chip,
-  Grid, InputAdornment, TablePagination, Tooltip
+  CircularProgress, FormControlLabel, Switch, Chip
 } from '@mui/material';
-import { 
-  Edit, 
-  Delete, 
-  Add, 
-  Refresh, 
-  Search, 
-  FilterAlt 
-} from '@mui/icons-material';
+import { Edit, Delete, Add, Refresh } from '@mui/icons-material';
 import { whitelistService } from '../../services/api';
 
 const WhitelistManagement = () => {
@@ -36,37 +28,16 @@ const WhitelistManagement = () => {
     isActive: true
   });
   const [isEditing, setIsEditing] = useState(false);
-  
-  // Параметры поиска и фильтрации
-  const [searchQuery, setSearchQuery] = useState('');
-  const [accessLevelFilter, setAccessLevelFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  
-  // Параметры пагинации
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [totalEntries, setTotalEntries] = useState(0);
 
-  // Загрузка данных белого списка с учетом фильтров и пагинации
+  // Загрузка данных белого списка
   const fetchWhitelist = async () => {
     try {
       setLoading(true);
       setError('');
-      
-      const params = {
-        search: searchQuery || undefined,
-        accessLevel: accessLevelFilter || undefined,
-        status: statusFilter || undefined,
-        limit: rowsPerPage,
-        offset: page * rowsPerPage
-      };
-      
-      console.log('Fetching whitelist data with params:', params);
-      const response = await whitelistService.getAll(params);
+      console.log('Fetching whitelist data...');
+      const response = await whitelistService.getAll();
       console.log('Whitelist data:', response.data);
-      
-      setWhitelist(response.data.entries);
-      setTotalEntries(response.data.total);
+      setWhitelist(response.data);
     } catch (err) {
       console.error('Error fetching whitelist:', err);
       setError('Ошибка при загрузке данных белого списка: ' + (err.response?.data?.message || err.message));
@@ -102,12 +73,6 @@ const WhitelistManagement = () => {
     } catch (err) {
       console.error('Error adding to whitelist:', err);
       setError('Ошибка при добавлении в белый список: ' + (err.response?.data?.message || err.message));
-      
-      setSnackbar({
-        open: true,
-        message: 'Ошибка при добавлении в белый список: ' + (err.response?.data?.message || err.message),
-        severity: 'error'
-      });
     }
   };
 
@@ -115,18 +80,6 @@ const WhitelistManagement = () => {
   const updateWhitelistEntry = async () => {
     try {
       setError('');
-      
-      // Проверка на привилегированного пользователя
-      if (currentEntry.discordId === '670742574818132008' && currentEntry.accessLevel !== 'admin') {
-        setSnackbar({
-          open: true,
-          message: 'Этому пользователю нельзя изменить уровень доступа администратора',
-          severity: 'error'
-        });
-        setOpenDialog(false);
-        return;
-      }
-      
       const result = await whitelistService.update(currentEntry.id, currentEntry);
       console.log('Updated whitelist entry:', result);
       
@@ -143,27 +96,11 @@ const WhitelistManagement = () => {
     } catch (err) {
       console.error('Error updating whitelist entry:', err);
       setError('Ошибка при обновлении записи: ' + (err.response?.data?.message || err.message));
-      
-      setSnackbar({
-        open: true,
-        message: 'Ошибка при обновлении записи: ' + (err.response?.data?.message || err.message),
-        severity: 'error'
-      });
     }
   };
 
   // Удаление записи из белого списка
-  const deleteWhitelistEntry = async (id, discordId) => {
-    // Проверка на привилегированного пользователя
-    if (discordId === '670742574818132008') {
-      setSnackbar({
-        open: true,
-        message: 'Этого пользователя нельзя удалить из белого списка',
-        severity: 'error'
-      });
-      return;
-    }
-    
+  const deleteWhitelistEntry = async (id) => {
     if (window.confirm('Вы уверены, что хотите удалить эту запись?')) {
       try {
         setError('');
@@ -228,33 +165,6 @@ const WhitelistManagement = () => {
     setOpenDialog(true);
   };
 
-  // Обработчики пагинации
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  // Применение фильтров
-  const applyFilters = () => {
-    setPage(0); // Сбрасываем на первую страницу при изменении фильтров
-    fetchWhitelist();
-  };
-
-  // Сброс фильтров
-  const resetFilters = () => {
-    setSearchQuery('');
-    setAccessLevelFilter('');
-    setStatusFilter('');
-    setPage(0);
-    
-    // После сброса фильтров загружаем данные
-    setTimeout(() => fetchWhitelist(), 0);
-  };
-
   // Закрытие снэкбара
   const handleCloseSnackbar = () => {
     setSnackbar({
@@ -263,30 +173,11 @@ const WhitelistManagement = () => {
     });
   };
 
-  // Загрузка данных при изменении параметров пагинации
-  useEffect(() => {
-    fetchWhitelist();
-  }, [page, rowsPerPage]);
-
   // Загрузка данных при монтировании компонента
   useEffect(() => {
     console.log('WhitelistManagement component mounted');
     fetchWhitelist();
   }, []);
-
-  // Получение цвета для чипа уровня доступа
-  const getAccessLevelColor = (level) => {
-    switch (level) {
-      case 'admin':
-        return 'error';
-      case 'gamemaster':
-        return 'warning';
-      case 'player':
-        return 'success';
-      default:
-        return 'default';
-    }
-  };
 
   return (
     <Box>
@@ -324,78 +215,6 @@ const WhitelistManagement = () => {
           Здесь вы можете управлять списком пользователей, которым разрешен доступ к системе через Discord OAuth.
           Только пользователи из этого списка смогут авторизоваться в приложении.
         </Typography>
-        
-        {/* Панель поиска и фильтрации */}
-        <Box mt={2}>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                label="Поиск по Discord ID"
-                variant="outlined"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search />
-                    </InputAdornment>
-                  ),
-                }}
-                helperText="Введите ID пользователя Discord"
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <FormControl fullWidth variant="outlined">
-                <InputLabel>Уровень доступа</InputLabel>
-                <Select
-                  value={accessLevelFilter}
-                  onChange={(e) => setAccessLevelFilter(e.target.value)}
-                  label="Уровень доступа"
-                >
-                  <MenuItem value="">Все уровни</MenuItem>
-                  <MenuItem value="admin">Администратор</MenuItem>
-                  <MenuItem value="gamemaster">Мастер</MenuItem>
-                  <MenuItem value="player">Игрок</MenuItem>
-                  <MenuItem value="guest">Гость</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <FormControl fullWidth variant="outlined">
-                <InputLabel>Статус</InputLabel>
-                <Select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  label="Статус"
-                >
-                  <MenuItem value="">Все статусы</MenuItem>
-                  <MenuItem value="active">Активные</MenuItem>
-                  <MenuItem value="inactive">Неактивные</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={2}>
-              <Box display="flex" gap={1}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<FilterAlt />}
-                  onClick={applyFilters}
-                  fullWidth
-                >
-                  Применить
-                </Button>
-                <Button
-                  variant="outlined"
-                  onClick={resetFilters}
-                >
-                  Сброс
-                </Button>
-              </Box>
-            </Grid>
-          </Grid>
-        </Box>
       </Paper>
 
       {loading ? (
@@ -403,89 +222,67 @@ const WhitelistManagement = () => {
           <CircularProgress />
         </Box>
       ) : (
-        <>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Discord ID</TableCell>
+                <TableCell>Уровень доступа</TableCell>
+                <TableCell>Заметки</TableCell>
+                <TableCell>Статус</TableCell>
+                <TableCell>Дата истечения</TableCell>
+                <TableCell>Действия</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {whitelist.length === 0 ? (
                 <TableRow>
-                  <TableCell>Discord ID</TableCell>
-                  <TableCell>Уровень доступа</TableCell>
-                  <TableCell>Заметки</TableCell>
-                  <TableCell>Статус</TableCell>
-                  <TableCell>Дата истечения</TableCell>
-                  <TableCell>Добавлен</TableCell>
-                  <TableCell>Действия</TableCell>
+                  <TableCell colSpan={6} align="center">
+                    <Typography variant="body2" color="text.secondary">
+                      Белый список пуст. Добавьте пользователей для доступа к системе.
+                    </Typography>
+                  </TableCell>
                 </TableRow>
-              </TableHead>
-              <TableBody>
-                {whitelist.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} align="center">
-                      <Typography variant="body2" color="text.secondary">
-                        Белый список пуст. Добавьте пользователей для доступа к системе.
-                      </Typography>
+              ) : (
+                whitelist.map(entry => (
+                  <TableRow key={entry.id}>
+                    <TableCell>{entry.discordId}</TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={entry.accessLevel} 
+                        color={
+                          entry.accessLevel === 'admin' ? 'error' :
+                          entry.accessLevel === 'gamemaster' ? 'warning' :
+                          entry.accessLevel === 'player' ? 'success' : 'default'
+                        }
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>{entry.notes}</TableCell>
+                    <TableCell>
+                      <Chip 
+                        label={entry.isActive ? 'Активен' : 'Неактивен'} 
+                        color={entry.isActive ? 'success' : 'default'}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {entry.expirationDate ? new Date(entry.expirationDate).toLocaleDateString() : 'Бессрочно'}
+                    </TableCell>
+                    <TableCell>
+                      <IconButton onClick={() => handleEdit(entry)} color="primary">
+                        <Edit />
+                      </IconButton>
+                      <IconButton onClick={() => deleteWhitelistEntry(entry.id)} color="error">
+                        <Delete />
+                      </IconButton>
                     </TableCell>
                   </TableRow>
-                ) : (
-                  whitelist.map(entry => (
-                    <TableRow key={entry.id}>
-                      <TableCell>{entry.discordId}</TableCell>
-                      <TableCell>
-                        <Chip 
-                          label={entry.accessLevel} 
-                          color={getAccessLevelColor(entry.accessLevel)}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>{entry.notes}</TableCell>
-                      <TableCell>
-                        <Chip 
-                          label={entry.isActive ? 'Активен' : 'Неактивен'} 
-                          color={entry.isActive ? 'success' : 'default'}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {entry.expirationDate ? new Date(entry.expirationDate).toLocaleDateString() : 'Бессрочно'}
-                      </TableCell>
-                      <TableCell>
-                        {entry.AddedByUser?.username || 'Система'}
-                      </TableCell>
-                      <TableCell>
-                        <Tooltip title="Редактировать">
-                          <IconButton onClick={() => handleEdit(entry)} color="primary">
-                            <Edit />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Удалить">
-                          <IconButton 
-                            onClick={() => deleteWhitelistEntry(entry.id, entry.discordId)} 
-                            color="error"
-                            disabled={entry.discordId === '670742574818132008'}
-                          >
-                            <Delete />
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          
-          <TablePagination
-            component="div"
-            count={totalEntries}
-            page={page}
-            onPageChange={handleChangePage}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            rowsPerPageOptions={[5, 10, 25, 50]}
-            labelRowsPerPage="Строк на странице:"
-            labelDisplayedRows={({ from, to, count }) => `${from}-${to} из ${count}`}
-          />
-        </>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
 
       <Dialog 
@@ -504,31 +301,24 @@ const WhitelistManagement = () => {
               margin="dense"
               label="Discord ID"
               fullWidth
-              value={currentEntry.discordId || ''}
+              value={currentEntry.discordId}
               onChange={(e) => setCurrentEntry({...currentEntry, discordId: e.target.value})}
               required
-              disabled={isEditing}
               helperText="Введите числовой ID пользователя Discord (не имя пользователя)"
               sx={{ mb: 2 }}
             />
             <FormControl fullWidth margin="dense" sx={{ mb: 2 }}>
               <InputLabel>Уровень доступа</InputLabel>
               <Select
-                value={currentEntry.accessLevel || 'player'}
+                value={currentEntry.accessLevel}
                 onChange={(e) => setCurrentEntry({...currentEntry, accessLevel: e.target.value})}
                 label="Уровень доступа"
-                disabled={currentEntry.discordId === '670742574818132008'}
               >
                 <MenuItem value="admin">Администратор</MenuItem>
                 <MenuItem value="gamemaster">Мастер</MenuItem>
                 <MenuItem value="player">Игрок</MenuItem>
                 <MenuItem value="guest">Гость</MenuItem>
               </Select>
-              {currentEntry.discordId === '670742574818132008' && (
-                <Typography variant="caption" color="error">
-                  Уровень доступа этого пользователя не может быть изменен
-                </Typography>
-              )}
             </FormControl>
             <TextField
               margin="dense"
@@ -557,28 +347,14 @@ const WhitelistManagement = () => {
                   checked={currentEntry.isActive || false}
                   onChange={(e) => setCurrentEntry({...currentEntry, isActive: e.target.checked})}
                   color="primary"
-                  disabled={currentEntry.discordId === '670742574818132008'}
                 />
               }
               label="Активен"
             />
-            {currentEntry.discordId === '670742574818132008' && currentEntry.isActive && (
-              <Typography variant="caption" color="error" display="block">
-                Этого пользователя нельзя деактивировать
-              </Typography>
-            )}
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setOpenDialog(false)}>Отмена</Button>
-            <Button 
-              type="submit" 
-              color="primary" 
-              variant="contained"
-              disabled={
-                currentEntry.discordId === '670742574818132008' && 
-                (currentEntry.accessLevel !== 'admin' || !currentEntry.isActive)
-              }
-            >
+            <Button type="submit" color="primary" variant="contained">
               {isEditing ? 'Сохранить' : 'Добавить'}
             </Button>
           </DialogActions>
