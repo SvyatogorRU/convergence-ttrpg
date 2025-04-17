@@ -1,4 +1,3 @@
-// client/src/pages/characters/CharacterView.js
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { 
@@ -29,11 +28,8 @@ const CharacterView = () => {
       setLoading(true);
       setError('');
       
-      // Если пользователь мастер или админ, запрашиваем полную информацию
-      const response = isGameMaster 
-        ? await characterService.getFullInfo(id)
-        : await characterService.getById(id);
-      
+      // Используем getById для всех пользователей, мастера увидят все детали персонажа
+      const response = await characterService.getById(id);
       setCharacter(response.data);
     } catch (err) {
       console.error('Ошибка при получении персонажа:', err);
@@ -51,7 +47,7 @@ const CharacterView = () => {
 
   useEffect(() => {
     fetchCharacter();
-  }, [id, isGameMaster]);
+  }, [id]);
 
   return (
     <Box>

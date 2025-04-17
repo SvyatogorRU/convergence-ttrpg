@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL;
+const API_URL = process.env.REACT_APP_API_URL || '/api';
 
 // Создание инстанса axios с базовым URL
 const api = axios.create({
@@ -57,12 +57,11 @@ const characterService = {
   getMyCharacters: (params) => api.get(addQueryParams('/characters/my', params)),
   getMyCharacter: () => api.get('/characters/my'),
   getById: (id) => api.get(`/characters/${id}`),
-  getFullInfo: (id) => api.get(`/characters/${id}/full`), // Полная информация для мастера
   create: (data) => api.post('/characters', data),
   update: (id, data) => api.put(`/characters/${id}`, data),
   updateStats: (id, data) => api.put(`/characters/${id}/stats`, data),
   updateSkills: (id, data) => api.put(`/characters/${id}/skills`, data),
-  checkUserHasCharacter: (userId) => api.get(`/characters/user/${userId}/check`),
+  checkUserHasCharacter: (userId) => api.get(`/characters/check?userId=${userId}`),
   checkMyCharacter: () => api.get('/characters/check'),
   
   // Работа с инвентарем
