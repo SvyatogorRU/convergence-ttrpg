@@ -55,10 +55,29 @@ const authService = {
 const characterService = {
   getAll: (params) => api.get(addQueryParams('/characters', params)),
   getMyCharacters: (params) => api.get(addQueryParams('/characters/my', params)),
+  getMyCharacter: () => api.get('/characters/my'),
   getById: (id) => api.get(`/characters/${id}`),
+  getFullInfo: (id) => api.get(`/characters/${id}/full`), // Полная информация для мастера
   create: (data) => api.post('/characters', data),
-  updateStats: (id, stats) => api.put(`/characters/${id}/stats`, { stats }),
-  addKnowledge: (id, knowledgeId) => api.post(`/characters/${id}/knowledge`, { knowledgeId })
+  update: (id, data) => api.put(`/characters/${id}`, data),
+  updateStats: (id, data) => api.put(`/characters/${id}/stats`, data),
+  updateSkills: (id, data) => api.put(`/characters/${id}/skills`, data),
+  checkUserHasCharacter: (userId) => api.get(`/characters/user/${userId}/check`),
+  checkMyCharacter: () => api.get('/characters/check'),
+  
+  // Работа с инвентарем
+  addInventoryItem: (characterId, item) => api.post(`/characters/${characterId}/inventory`, item),
+  updateInventoryItem: (characterId, itemId, item) => api.put(`/characters/${characterId}/inventory/${itemId}`, item),
+  deleteInventoryItem: (characterId, itemId) => api.delete(`/characters/${characterId}/inventory/${itemId}`),
+  
+  // Работа со знаниями
+  addKnowledge: (characterId, knowledgeId, data) => api.post(`/characters/${characterId}/knowledge`, { knowledgeId, ...data }),
+  getKnowledge: (characterId) => api.get(`/characters/${characterId}/knowledge`),
+  
+  // Работа с заметками
+  addNote: (characterId, data) => api.post(`/characters/${characterId}/notes`, data),
+  updateNote: (characterId, noteId, data) => api.put(`/characters/${characterId}/notes/${noteId}`, data),
+  deleteNote: (characterId, noteId) => api.delete(`/characters/${characterId}/notes/${noteId}`)
 };
 
 const campaignService = {

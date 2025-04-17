@@ -30,7 +30,10 @@ const db = {
   CharacterSkill: require('./characterSkill.model')(sequelize, Sequelize),
   Formula: require('./formula.model')(sequelize, Sequelize),
   Knowledge: require('./knowledge.model')(sequelize, Sequelize),
-  CharacterKnowledge: require('./characterKnowledge.model')(sequelize, Sequelize)
+  CharacterKnowledge: require('./characterKnowledge.model')(sequelize, Sequelize),
+  // Добавьте следующие модели, если они существуют:
+  CharacterInventory: require('./characterInventory.model')(sequelize, Sequelize),
+  CharacterNote: require('./characterNote.model')(sequelize, Sequelize)
 };
 
 // Определение связей
@@ -48,6 +51,13 @@ db.CharacterStat.belongsTo(db.Character);
 
 db.Character.hasMany(db.CharacterSkill);
 db.CharacterSkill.belongsTo(db.Character);
+
+// Если у вас не созданы эти модели, закомментируйте следующие 4 строки
+db.Character.hasMany(db.CharacterInventory);
+db.CharacterInventory.belongsTo(db.Character);
+
+db.Character.hasMany(db.CharacterNote);
+db.CharacterNote.belongsTo(db.Character);
 
 db.Character.belongsToMany(db.Knowledge, { through: db.CharacterKnowledge });
 db.Knowledge.belongsToMany(db.Character, { through: db.CharacterKnowledge });

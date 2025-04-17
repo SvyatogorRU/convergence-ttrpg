@@ -9,6 +9,8 @@ const DISCORD_API = 'https://discord.com/api/v10';
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI;
+// Добавляем проверку для CLIENT_URL
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 
 // Генерация ссылки для авторизации через Discord
 router.get('/discord', (req, res) => {
@@ -111,8 +113,8 @@ router.all('/discord/callback', async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRATION }
     );
     
-    // Отправка токена клиенту
-    res.redirect(`${process.env.CLIENT_URL}/auth/callback?token=${token}`);
+    // Отправка токена клиенту - ИСПРАВЛЕННАЯ СТРОКА
+    res.redirect(`${CLIENT_URL}/auth/callback?token=${token}`);
   } catch (error) {
     console.error('Ошибка авторизации через Discord:', error);
     res.status(500).json({ message: 'Ошибка при авторизации через Discord' });
