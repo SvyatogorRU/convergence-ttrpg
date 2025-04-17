@@ -29,7 +29,7 @@ const FormulaCalculator = () => <div>Калькулятор формул (буд
 const KnowledgeBase = () => <div>База знаний (будет реализовано позже)</div>;
 const AdminPanel = () => <div>Панель администратора (будет реализовано позже)</div>;
 const UserManagement = () => <div>Управление пользователями (будет реализовано позже)</div>;
-const WhitelistManagement = () => <div>Управление белым списком (будет реализовано позже)</div>;
+import WhitelistManagement from './pages/admin/WhitelistManagement';
 
 // Создание темы
 const theme = createTheme({

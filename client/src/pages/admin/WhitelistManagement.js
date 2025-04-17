@@ -1,4 +1,3 @@
-// src/pages/admin/WhitelistManagement.js
 import React, { useState, useEffect } from 'react';
 import { 
   Box, Typography, Button, TextField, Dialog, 
@@ -8,7 +7,7 @@ import {
   InputLabel, Select, MenuItem
 } from '@mui/material';
 import { Edit, Delete, Add } from '@mui/icons-material';
-import axios from 'axios';
+import { whitelistService } from '../../services/api';
 
 const WhitelistManagement = () => {
   const [whitelist, setWhitelist] = useState([]);
@@ -27,10 +26,7 @@ const WhitelistManagement = () => {
   const fetchWhitelist = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/users/whitelist`,
-        { headers: { 'x-auth-token': localStorage.getItem('token') } }
-      );
+      const response = await whitelistService.getAll();
       setWhitelist(response.data);
     } catch (err) {
       setError('Ошибка при загрузке данных белого списка');
@@ -43,11 +39,7 @@ const WhitelistManagement = () => {
   // Добавление записи в белый список
   const addToWhitelist = async () => {
     try {
-      await axios.post(
-        `${process.env.REACT_APP_API_URL}/users/whitelist`,
-        currentEntry,
-        { headers: { 'x-auth-token': localStorage.getItem('token') } }
-      );
+      await whitelistService.add(currentEntry);
       setOpenDialog(false);
       fetchWhitelist();
     } catch (err) {
@@ -59,11 +51,7 @@ const WhitelistManagement = () => {
   // Обновление записи в белом списке
   const updateWhitelistEntry = async () => {
     try {
-      await axios.put(
-        `${process.env.REACT_APP_API_URL}/users/whitelist/${currentEntry.id}`,
-        currentEntry,
-        { headers: { 'x-auth-token': localStorage.getItem('token') } }
-      );
+      await whitelistService.update(currentEntry.id, currentEntry);
       setOpenDialog(false);
       fetchWhitelist();
     } catch (err) {
@@ -76,10 +64,7 @@ const WhitelistManagement = () => {
   const deleteWhitelistEntry = async (id) => {
     if (window.confirm('Вы уверены, что хотите удалить эту запись?')) {
       try {
-        await axios.delete(
-          `${process.env.REACT_APP_API_URL}/users/whitelist/${id}`,
-          { headers: { 'x-auth-token': localStorage.getItem('token') } }
-        );
+        await whitelistService.delete(id);
         fetchWhitelist();
       } catch (err) {
         setError('Ошибка при удалении записи');
