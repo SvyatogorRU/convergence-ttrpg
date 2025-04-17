@@ -5,6 +5,14 @@ module.exports = (sequelize, Sequelize) => {
       defaultValue: Sequelize.UUIDV4,
       primaryKey: true
     },
+    userId: {
+      type: Sequelize.UUID,
+      allowNull: false,
+      references: {
+        model: 'users',
+        key: 'id'
+      }
+    },
     name: {
       type: Sequelize.STRING,
       allowNull: false
@@ -14,6 +22,18 @@ module.exports = (sequelize, Sequelize) => {
     },
     avatarUrl: {
       type: Sequelize.STRING
+    },
+    // Добавьте эти поля, которых не хватает
+    characterOccupation: {
+      type: Sequelize.STRING
+    },
+    homeRegion: {
+      type: Sequelize.STRING,
+      defaultValue: "Перекресток Миров"
+    },
+    discoveredShards: {
+      type: Sequelize.JSON,
+      defaultValue: []
     },
     isActive: {
       type: Sequelize.BOOLEAN,

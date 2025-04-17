@@ -30,7 +30,12 @@ const db = {
   CharacterSkill: require('./characterSkill.model')(sequelize, Sequelize),
   Formula: require('./formula.model')(sequelize, Sequelize),
   Knowledge: require('./knowledge.model')(sequelize, Sequelize),
-  CharacterKnowledge: require('./characterKnowledge.model')(sequelize, Sequelize)
+  CharacterKnowledge: require('./characterKnowledge.model')(sequelize, Sequelize),
+  CharacterInventory: require('./characterInventory.model')(sequelize, Sequelize),
+  CharacterNote: require('./characterNote.model')(sequelize, Sequelize),
+  // Добавляем новые модели справочников
+  ReferenceItem: require('./referenceItem.model')(sequelize, Sequelize),
+  ReferencePermission: require('./referencePermission.model')(sequelize, Sequelize)
 };
 
 // Определение связей
@@ -49,6 +54,12 @@ db.CharacterStat.belongsTo(db.Character);
 db.Character.hasMany(db.CharacterSkill);
 db.CharacterSkill.belongsTo(db.Character);
 
+db.Character.hasMany(db.CharacterInventory);
+db.CharacterInventory.belongsTo(db.Character);
+
+db.Character.hasMany(db.CharacterNote);
+db.CharacterNote.belongsTo(db.Character);
+
 db.Character.belongsToMany(db.Knowledge, { through: db.CharacterKnowledge });
 db.Knowledge.belongsToMany(db.Character, { through: db.CharacterKnowledge });
 
@@ -61,6 +72,35 @@ db.WhiteList.belongsTo(db.User, {
 db.User.hasMany(db.WhiteList, { 
   foreignKey: 'addedBy', 
   as: 'AddedWhitelistEntries' 
+});
+
+// Связи для справочников
+db.User.hasMany(db.ReferenceItem, {
+  foreignKey: 'createdBy',
+  as: 'CreatedReferenceItems'
+});
+db.ReferenceItem.belongsTo(db.User, {
+  foreignKey: 'createdBy',
+  as: 'Creator'
+});
+
+// Связи для прав доступа к справочникам
+db.User.hasMany(db.ReferencePermission, {
+  foreignKey: 'userId',
+  as: 'ReferencePermissions'
+});
+db.ReferencePermission.belongsTo(db.User, {
+  foreignKey: 'userId',
+  as: 'User'
+});
+
+db.User.hasMany(db.ReferencePermission, {
+  foreignKey: 'grantedBy',
+  as: 'GrantedPermissions'
+});
+db.ReferencePermission.belongsTo(db.User, {
+  foreignKey: 'grantedBy',
+  as: 'Grantor'
 });
 
 module.exports = db;

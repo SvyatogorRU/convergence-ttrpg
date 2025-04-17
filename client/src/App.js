@@ -25,9 +25,12 @@ import AdminPanel from './pages/admin/AdminPanel';
 import UserManagement from './pages/admin/UserManagement';
 import WhitelistManagement from './pages/admin/WhitelistManagement';
 
+// Страницы персонажей
+import CharactersList from './pages/characters/CharactersList';
+import CharacterView from './pages/characters/CharacterView';
+import CharacterCreate from './pages/characters/CharacterCreate';
+
 // Заглушки для страниц (будут реализованы позже)
-const CharactersList = () => <div>Список персонажей (будет реализовано позже)</div>;
-const CharacterDetail = () => <div>Детали персонажа (будет реализовано позже)</div>;
 const CampaignsList = () => <div>Список кампаний (будет реализовано позже)</div>;
 const CampaignDetail = () => <div>Детали кампании (будет реализовано позже)</div>;
 const FormulaCalculator = () => <div>Калькулятор формул (будет реализовано позже)</div>;
@@ -74,7 +77,15 @@ function App() {
               
               {/* Персонажи */}
               <Route path="characters" element={<CharactersList />} />
-              <Route path="characters/:id" element={<CharacterDetail />} />
+              <Route path="characters/:id" element={<CharacterView />} />
+              <Route 
+                path="characters/create" 
+                element={
+                  <RoleRoute allowedRoles={['admin', 'gamemaster']}>
+                    <CharacterCreate />
+                  </RoleRoute>
+                } 
+              />
               
               {/* Кампании */}
               <Route path="campaigns" element={<CampaignsList />} />
