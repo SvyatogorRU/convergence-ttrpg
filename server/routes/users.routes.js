@@ -1,16 +1,50 @@
 const express = require('express');
 const router = express.Router();
-const { User, WhiteList } = require('../models');
+const { User, WhiteList, Sequelize } = require('../models');
 const { auth, checkRole } = require('../middleware/auth.middleware');
+const { Op } = Sequelize;
 
 // Получение всех пользователей (только для админов)
 router.get('/', auth, checkRole('admin'), async (req, res) => {
   try {
-    const users = await User.findAll({
-      attributes: { exclude: ['password'] }
+    const { search, role, status, limit = 50, offset = 0 } = req.query;
+    
+    // Конструируем условия поиска
+    let whereCondition = {};
+    
+    if (search) {
+      whereCondition = {
+        [Op.or]: [
+          { username: { [Op.iLike]: `%${search}%` } },
+          { email: { [Op.iLike]: `%${search}%` } },
+          { discordId: { [Op.iLike]: `%${search}%` } }
+        ]
+      };
+    }
+    
+    if (role) {
+      whereCondition.role = role;
+    }
+    
+    if (status !== undefined) {
+      whereCondition.isActive = status === 'active';
+    }
+    
+    // Получаем пользователей с пагинацией и учетом условий
+    const users = await User.findAndCountAll({
+      where: whereCondition,
+      attributes: { exclude: ['password'] },
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      order: [['lastLogin', 'DESC']]
     });
     
-    res.json(users);
+    res.json({
+      total: users.count,
+      users: users.rows,
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
   } catch (error) {
     console.error('Ошибка при получении пользователей:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
@@ -39,17 +73,43 @@ router.get('/me', auth, async (req, res) => {
 // Управление белым списком (получение списка) - только для админов
 router.get('/whitelist', auth, checkRole('admin'), async (req, res) => {
   try {
-    const whitelist = await WhiteList.findAll({
+    const { search, accessLevel, status, limit = 50, offset = 0 } = req.query;
+    
+    // Формируем условия поиска
+    let whereCondition = {};
+    
+    if (search) {
+      whereCondition.discordId = { [Op.iLike]: `%${search}%` };
+    }
+    
+    if (accessLevel) {
+      whereCondition.accessLevel = accessLevel;
+    }
+    
+    if (status !== undefined) {
+      whereCondition.isActive = status === 'active';
+    }
+    
+    const whitelist = await WhiteList.findAndCountAll({
+      where: whereCondition,
       include: [
         {
           model: User,
           as: 'AddedByUser',
           attributes: ['id', 'username']
         }
-      ]
+      ],
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      order: [['updatedAt', 'DESC']]
     });
     
-    res.json(whitelist);
+    res.json({
+      total: whitelist.count,
+      entries: whitelist.rows,
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
   } catch (error) {
     console.error('Ошибка при получении белого списка:', error);
     res.status(500).json({ message: 'Ошибка сервера' });
@@ -91,6 +151,15 @@ router.post('/whitelist', auth, checkRole('admin'), async (req, res) => {
       isActive: true
     });
     
+    // Проверяем, есть ли уже такой пользователь в системе
+    const existingUser = await User.findOne({ where: { discordId } });
+    
+    // Если пользователь уже авторизовывался, обновляем его роль
+    if (existingUser) {
+      existingUser.role = accessLevel;
+      await existingUser.save();
+    }
+    
     res.status(201).json(whitelistEntry);
   } catch (error) {
     console.error('Ошибка при добавлении в белый список:', error);
@@ -108,6 +177,13 @@ router.put('/whitelist/:id', auth, checkRole('admin'), async (req, res) => {
     
     if (!whitelistEntry) {
       return res.status(404).json({ message: 'Запись в белом списке не найдена' });
+    }
+    
+    // Защита привилегированного пользователя
+    if (whitelistEntry.discordId === '670742574818132008' && accessLevel !== 'admin') {
+      return res.status(403).json({ 
+        message: 'Этому пользователю нельзя изменить уровень доступа администратора' 
+      });
     }
     
     // Обработка даты истечения
@@ -135,6 +211,13 @@ router.put('/whitelist/:id', auth, checkRole('admin'), async (req, res) => {
     
     await whitelistEntry.save();
     
+    // Синхронизация роли с пользователем, если он существует
+    const user = await User.findOne({ where: { discordId: whitelistEntry.discordId } });
+    if (user && accessLevel) {
+      user.role = accessLevel;
+      await user.save();
+    }
+    
     res.json(whitelistEntry);
   } catch (error) {
     console.error('Ошибка при обновлении записи в белом списке:', error);
@@ -151,6 +234,13 @@ router.delete('/whitelist/:id', auth, checkRole('admin'), async (req, res) => {
     
     if (!whitelistEntry) {
       return res.status(404).json({ message: 'Запись в белом списке не найдена' });
+    }
+    
+    // Защита привилегированного пользователя
+    if (whitelistEntry.discordId === '670742574818132008') {
+      return res.status(403).json({ 
+        message: 'Этого пользователя нельзя удалить из белого списка' 
+      });
     }
     
     await whitelistEntry.destroy();
@@ -175,12 +265,30 @@ router.put('/:id/role', auth, checkRole('admin'), async (req, res) => {
       return res.status(404).json({ message: 'Пользователь не найден' });
     }
     
+    // Защита привилегированного пользователя
+    if (user.discordId === '670742574818132008' && role !== 'admin') {
+      return res.status(403).json({ 
+        message: 'Этому пользователю нельзя изменить роль администратора' 
+      });
+    }
+    
     if (!['admin', 'gamemaster', 'player', 'guest'].includes(role)) {
       return res.status(400).json({ message: 'Недопустимая роль' });
     }
     
+    // Обновление роли пользователя
     user.role = role;
     await user.save();
+    
+    // Синхронизация с белым списком
+    const whitelistEntry = await WhiteList.findOne({ 
+      where: { discordId: user.discordId }
+    });
+    
+    if (whitelistEntry) {
+      whitelistEntry.accessLevel = role;
+      await whitelistEntry.save();
+    }
     
     res.json({ message: 'Роль пользователя успешно обновлена' });
   } catch (error) {
@@ -205,8 +313,25 @@ router.put('/:id/status', auth, checkRole('admin'), async (req, res) => {
       return res.status(404).json({ message: 'Пользователь не найден' });
     }
     
+    // Защита привилегированного пользователя
+    if (user.discordId === '670742574818132008' && !isActive) {
+      return res.status(403).json({ 
+        message: 'Этого пользователя нельзя деактивировать' 
+      });
+    }
+    
     user.isActive = isActive;
     await user.save();
+    
+    // Синхронизация с белым списком
+    const whitelistEntry = await WhiteList.findOne({
+      where: { discordId: user.discordId }
+    });
+    
+    if (whitelistEntry) {
+      whitelistEntry.isActive = isActive;
+      await whitelistEntry.save();
+    }
     
     res.json({ message: 'Статус пользователя успешно обновлен' });
   } catch (error) {

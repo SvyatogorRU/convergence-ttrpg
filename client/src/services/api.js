@@ -31,6 +31,20 @@ api.interceptors.response.use(
   }
 );
 
+// Вспомогательная функция для добавления параметров запроса
+const addQueryParams = (url, params) => {
+  if (!params) return url;
+  
+  const queryParams = [];
+  for (const key in params) {
+    if (params[key] !== undefined) {
+      queryParams.push(`${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`);
+    }
+  }
+  
+  return queryParams.length > 0 ? `${url}?${queryParams.join('&')}` : url;
+};
+
 // API сервисы
 const authService = {
   getDiscordAuthUrl: () => api.get('/auth/discord'),
@@ -39,8 +53,8 @@ const authService = {
 };
 
 const characterService = {
-  getAll: () => api.get('/characters'),
-  getMyCharacters: () => api.get('/characters/my'),
+  getAll: (params) => api.get(addQueryParams('/characters', params)),
+  getMyCharacters: (params) => api.get(addQueryParams('/characters/my', params)),
   getById: (id) => api.get(`/characters/${id}`),
   create: (data) => api.post('/characters', data),
   updateStats: (id, stats) => api.put(`/characters/${id}/stats`, { stats }),
@@ -48,9 +62,9 @@ const characterService = {
 };
 
 const campaignService = {
-  getAll: () => api.get('/campaigns/all'),
-  getMyCampaigns: () => api.get('/campaigns/my'),
-  getPlayerCampaigns: () => api.get('/campaigns/player'),
+  getAll: (params) => api.get(addQueryParams('/campaigns/all', params)),
+  getMyCampaigns: (params) => api.get(addQueryParams('/campaigns/my', params)),
+  getPlayerCampaigns: (params) => api.get(addQueryParams('/campaigns/player', params)),
   getById: (id) => api.get(`/campaigns/${id}`),
   create: (data) => api.post('/campaigns', data),
   update: (id, data) => api.put(`/campaigns/${id}`, data),
@@ -59,7 +73,7 @@ const campaignService = {
 };
 
 const formulaService = {
-  getAll: () => api.get('/formulas'),
+  getAll: (params) => api.get(addQueryParams('/formulas', params)),
   getById: (id) => api.get(`/formulas/${id}`),
   create: (data) => api.post('/formulas', data),
   update: (id, data) => api.put(`/formulas/${id}`, data),
@@ -68,7 +82,7 @@ const formulaService = {
 };
 
 const userService = {
-  getAll: () => api.get('/users'),
+  getAll: (params) => api.get(addQueryParams('/users', params)),
   getMe: () => api.get('/users/me'),
   getById: (id) => api.get(`/users/${id}`),
   updateRole: (id, role) => api.put(`/users/${id}/role`, { role }),
@@ -76,7 +90,7 @@ const userService = {
 };
 
 const whitelistService = {
-  getAll: () => api.get('/users/whitelist'),
+  getAll: (params) => api.get(addQueryParams('/users/whitelist', params)),
   add: (data) => api.post('/users/whitelist', data),
   update: (id, data) => api.put(`/users/whitelist/${id}`, data),
   delete: (id) => api.delete(`/users/whitelist/${id}`)
