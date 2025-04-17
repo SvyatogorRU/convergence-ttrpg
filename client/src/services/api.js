@@ -82,6 +82,26 @@ const whitelistService = {
   delete: (id) => api.delete(`/users/whitelist/${id}`)
 };
 
+// Новый сервис для работы со справочниками
+const referenceService = {
+  // Работа с элементами справочника
+  getAll: (params) => api.get(addQueryParams('/reference', params)),
+  getById: (id) => api.get(`/reference/${id}`),
+  create: (data) => api.post('/reference', data),
+  update: (id, data) => api.put(`/reference/${id}`, data),
+  delete: (id) => api.delete(`/reference/${id}`),
+  
+  // Категории для справочников
+  getCategories: (type) => api.get(`/reference/categories?type=${type}`),
+  
+  // Методы для работы с правами доступа к справочникам
+  getAllPermissions: () => api.get('/reference/permissions/all'),
+  getUserPermissions: (userId) => api.get(`/reference/permissions/user/${userId}`),
+  getMyPermissions: () => api.get('/reference/permissions/my'),
+  addPermission: (data) => api.post('/reference/permissions', data),
+  deletePermission: (id) => api.delete(`/reference/permissions/${id}`)
+};
+
 export {
   api,
   authService,
@@ -89,5 +109,6 @@ export {
   campaignService,
   formulaService,
   userService,
-  whitelistService
+  whitelistService,
+  referenceService
 };

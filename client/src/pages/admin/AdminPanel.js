@@ -16,7 +16,8 @@ import {
   People as PeopleIcon,
   FormatListBulleted as WhitelistIcon,
   Settings as SettingsIcon,
-  Dashboard as DashboardIcon
+  Dashboard as DashboardIcon,
+  Storage as StorageIcon
 } from '@mui/icons-material';
 
 const AdminPanel = () => {
@@ -34,6 +35,12 @@ const AdminPanel = () => {
       description: 'Добавление и удаление пользователей из белого списка Discord',
       icon: <WhitelistIcon fontSize="large" />,
       path: '/admin/whitelist'
+    },
+    {
+      title: 'Управление справочниками',
+      description: 'Создание и редактирование справочников игры: навыки, предметы, заклинания и др.',
+      icon: <StorageIcon fontSize="large" />,
+      path: '/admin/reference'
     },
     {
       title: 'Настройки системы',
@@ -112,6 +119,10 @@ const AdminPanel = () => {
             <ListItem button onClick={() => navigate('/admin/whitelist')}>
               <ListItemIcon><WhitelistIcon /></ListItemIcon>
               <ListItemText primary="Управление белым списком" />
+            </ListItem>
+            <ListItem button onClick={() => navigate('/admin/reference')}>
+              <ListItemIcon><StorageIcon /></ListItemIcon>
+              <ListItemText primary="Управление справочниками" />
             </ListItem>
             <ListItem button onClick={() => navigate('/')}>
               <ListItemIcon><DashboardIcon /></ListItemIcon>

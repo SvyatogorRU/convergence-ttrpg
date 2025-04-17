@@ -27,7 +27,8 @@ import {
   Psychology as PsychologyIcon,
   Campaign as CampaignIcon,
   AdminPanelSettings as AdminIcon,
-  Logout as LogoutIcon
+  Logout as LogoutIcon,
+  Storage as StorageIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -65,24 +66,21 @@ const MainLayout = () => {
     { text: 'База знаний', icon: <BookIcon />, path: '/knowledge' }
   ];
 
-  
-
   // Добавляем пункты админ-меню только для администраторов
   const adminMenuItems = currentUser && currentUser.role === 'admin' ? [
-  { 
-    text: 'Администрирование', 
-    icon: <AdminIcon />, 
-    path: '/admin',
-    subItems: [
-      { text: 'Главная панель', path: '/admin' },
-      { text: 'Управление пользователями', path: '/admin/users' },
-      { text: 'Управление белым списком', path: '/admin/whitelist' }
-    ] 
-  }
-] : [];
+    { 
+      text: 'Администрирование', 
+      icon: <AdminIcon />, 
+      path: '/admin',
+      subItems: [
+        { text: 'Главная панель', path: '/admin' },
+        { text: 'Управление пользователями', path: '/admin/users' },
+        { text: 'Управление белым списком', path: '/admin/whitelist' },
+        { text: 'Управление справочниками', path: '/admin/reference' } // Новый пункт меню
+      ] 
+    }
+  ] : [];
   
-  
-
   const drawer = (
     <div>
       <Toolbar>
@@ -103,6 +101,40 @@ const MainLayout = () => {
           </ListItem>
         ))}
       </List>
+      
+      {/* Добавляем секцию администрирования */}
+      {adminMenuItems.length > 0 && (
+        <>
+          <Divider sx={{ my: 1 }} />
+          <List>
+            {adminMenuItems.map((item) => (
+              <ListItem key={item.text} disablePadding>
+                <ListItemButton onClick={() => navigate(item.path)}>
+                  <ListItemIcon>
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText primary={item.text} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+            
+            {/* Подменю администрирования */}
+            {adminMenuItems[0]?.subItems && (
+              <List component="div" disablePadding>
+                {adminMenuItems[0].subItems.map((subItem) => (
+                  <ListItemButton 
+                    key={subItem.text} 
+                    sx={{ pl: 4 }}
+                    onClick={() => navigate(subItem.path)}
+                  >
+                    <ListItemText primary={subItem.text} />
+                  </ListItemButton>
+                ))}
+              </List>
+            )}
+          </List>
+        </>
+      )}
     </div>
   );
 
