@@ -9,7 +9,8 @@ import {
 } from '@mui/material';
 import { characterService } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
-import UnifiedCharacterCard from '../../components/character/UnifiedCharacterCard';
+import CharacterCard from '../../components/character/CharacterCard';
+import CharacterEditDialog from '../../components/character/CharacterEditDialog';
 
 const CharacterView = () => {
   const { id } = useParams();
@@ -17,6 +18,7 @@ const CharacterView = () => {
   const [character, setCharacter] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   
   const isGameMaster = currentUser && ['admin', 'gamemaster'].includes(currentUser.role);
 
@@ -39,6 +41,7 @@ const CharacterView = () => {
 
   // Обработчик после сохранения изменений
   const handleCharacterUpdated = () => {
+    setEditDialogOpen(false);
     fetchCharacter(); // Перезагружаем данные персонажа
   };
 
@@ -52,6 +55,16 @@ const CharacterView = () => {
         <Typography variant="h4">
           {loading ? 'Загрузка персонажа...' : character ? character.name : 'Персонаж'}
         </Typography>
+        
+        {isGameMaster && character && (
+          <Button 
+            variant="contained" 
+            color="primary" 
+            onClick={() => setEditDialogOpen(true)}
+          >
+            Редактировать персонажа
+          </Button>
+        )}
       </Box>
 
       {error && (
@@ -65,15 +78,23 @@ const CharacterView = () => {
           <CircularProgress />
         </Box>
       ) : character ? (
-        <UnifiedCharacterCard 
+        <CharacterCard 
           character={character} 
-          isGameMaster={isGameMaster}
-          onCharacterUpdated={handleCharacterUpdated}
+          isGameMaster={isGameMaster} 
         />
       ) : (
         <Alert severity="info">
           Персонаж не найден или у вас нет к нему доступа
         </Alert>
+      )}
+
+      {isGameMaster && character && (
+        <CharacterEditDialog 
+          open={editDialogOpen}
+          onClose={() => setEditDialogOpen(false)}
+          character={character}
+          onSave={handleCharacterUpdated}
+        />
       )}
     </Box>
   );

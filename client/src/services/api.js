@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL;
+const API_URL = process.env.REACT_APP_API_URL || '/api';
 
 // Создание инстанса axios с базовым URL
 const api = axios.create({
@@ -31,6 +31,20 @@ api.interceptors.response.use(
   }
 );
 
+// Вспомогательная функция для добавления параметров запроса
+const addQueryParams = (url, params) => {
+  if (!params) return url;
+  
+  const queryParams = [];
+  for (const key in params) {
+    if (params[key] !== undefined) {
+      queryParams.push(`${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`);
+    }
+  }
+  
+  return queryParams.length > 0 ? `${url}?${queryParams.join('&')}` : url;
+};
+
 // API сервисы
 const authService = {
   getDiscordAuthUrl: () => api.get('/auth/discord'),
@@ -39,18 +53,36 @@ const authService = {
 };
 
 const characterService = {
-  getAll: () => api.get('/characters'),
-  getMyCharacters: () => api.get('/characters/my'),
+  getAll: (params) => api.get(addQueryParams('/characters', params)),
+  getMyCharacters: (params) => api.get(addQueryParams('/characters/my', params)),
+  getMyCharacter: () => api.get('/characters/my'),
   getById: (id) => api.get(`/characters/${id}`),
   create: (data) => api.post('/characters', data),
-  updateStats: (id, stats) => api.put(`/characters/${id}/stats`, { stats }),
-  addKnowledge: (id, knowledgeId) => api.post(`/characters/${id}/knowledge`, { knowledgeId })
+  update: (id, data) => api.put(`/characters/${id}`, data),
+  updateStats: (id, data) => api.put(`/characters/${id}/stats`, data),
+  updateSkills: (id, data) => api.put(`/characters/${id}/skills`, data),
+  checkUserHasCharacter: (userId) => api.get(`/characters/check?userId=${userId}`),
+  checkMyCharacter: () => api.get('/characters/check'),
+  
+  // Работа с инвентарем
+  addInventoryItem: (characterId, item) => api.post(`/characters/${characterId}/inventory`, item),
+  updateInventoryItem: (characterId, itemId, item) => api.put(`/characters/${characterId}/inventory/${itemId}`, item),
+  deleteInventoryItem: (characterId, itemId) => api.delete(`/characters/${characterId}/inventory/${itemId}`),
+  
+  // Работа со знаниями
+  addKnowledge: (characterId, knowledgeId, data) => api.post(`/characters/${characterId}/knowledge`, { knowledgeId, ...data }),
+  getKnowledge: (characterId) => api.get(`/characters/${characterId}/knowledge`),
+  
+  // Работа с заметками
+  addNote: (characterId, data) => api.post(`/characters/${characterId}/notes`, data),
+  updateNote: (characterId, noteId, data) => api.put(`/characters/${characterId}/notes/${noteId}`, data),
+  deleteNote: (characterId, noteId) => api.delete(`/characters/${characterId}/notes/${noteId}`)
 };
 
 const campaignService = {
-  getAll: () => api.get('/campaigns/all'),
-  getMyCampaigns: () => api.get('/campaigns/my'),
-  getPlayerCampaigns: () => api.get('/campaigns/player'),
+  getAll: (params) => api.get(addQueryParams('/campaigns/all', params)),
+  getMyCampaigns: (params) => api.get(addQueryParams('/campaigns/my', params)),
+  getPlayerCampaigns: (params) => api.get(addQueryParams('/campaigns/player', params)),
   getById: (id) => api.get(`/campaigns/${id}`),
   create: (data) => api.post('/campaigns', data),
   update: (id, data) => api.put(`/campaigns/${id}`, data),
@@ -59,7 +91,7 @@ const campaignService = {
 };
 
 const formulaService = {
-  getAll: () => api.get('/formulas'),
+  getAll: (params) => api.get(addQueryParams('/formulas', params)),
   getById: (id) => api.get(`/formulas/${id}`),
   create: (data) => api.post('/formulas', data),
   update: (id, data) => api.put(`/formulas/${id}`, data),
@@ -68,7 +100,7 @@ const formulaService = {
 };
 
 const userService = {
-  getAll: () => api.get('/users'),
+  getAll: (params) => api.get(addQueryParams('/users', params)),
   getMe: () => api.get('/users/me'),
   getById: (id) => api.get(`/users/${id}`),
   updateRole: (id, role) => api.put(`/users/${id}/role`, { role }),
@@ -76,7 +108,7 @@ const userService = {
 };
 
 const whitelistService = {
-  getAll: () => api.get('/users/whitelist'),
+  getAll: (params) => api.get(addQueryParams('/users/whitelist', params)),
   add: (data) => api.post('/users/whitelist', data),
   update: (id, data) => api.put(`/users/whitelist/${id}`, data),
   delete: (id) => api.delete(`/users/whitelist/${id}`)

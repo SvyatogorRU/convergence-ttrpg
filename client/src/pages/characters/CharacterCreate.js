@@ -95,8 +95,7 @@ function BasicInfoStep({ formData, setFormData }) {
 }
 
 function AttributesStep({ formData, setFormData }) {
-  // Удалено: состояние отслеживания оставшихся очков
-  // const [remainingPoints, setRemainingPoints] = useState(15);
+  const [remainingPoints, setRemainingPoints] = useState(15);
   const [errorMessage, setErrorMessage] = useState('');
 
   // Базовые характеристики мира Конвергенции
@@ -109,25 +108,36 @@ function AttributesStep({ formData, setFormData }) {
   ];
 
   useEffect(() => {
+    // Расчет оставшихся очков
+    const usedPoints = formData.baseStats.reduce((sum, stat) => sum + stat.value, 0);
+    setRemainingPoints(15 - usedPoints);
+    
     // Проверка минимальных значений
     const hasAnyZero = formData.baseStats.some(stat => stat.value < 1);
     if (hasAnyZero) {
       setErrorMessage('Все базовые характеристики должны иметь значение не менее 1');
+    } else if (remainingPoints < 0) {
+      setErrorMessage('Вы использовали больше очков, чем доступно');
     } else {
       setErrorMessage('');
     }
-  }, [formData.baseStats]);
+  }, [formData.baseStats, remainingPoints]);
 
   const handleStatChange = (index, value) => {
-    // Проверяем, что новое значение не меньше минимального
+    // Проверяем, что новое значение в пределах допустимого диапазона
     if (value < 1) value = 1;
-    // УДАЛЕНО: Максимальное значение увеличено с 4 до 10
-    if (value > 10) value = 10;
+    if (value > 4) value = 4;
     
-    // УДАЛЕНО: Проверка на достаточность очков
-    // УДАЛЕНО: Больше не ограничиваем повышение характеристик оставшимися очками
-    
+    // Проверяем, достаточно ли очков для изменения
     const updatedStats = [...formData.baseStats];
+    const oldValue = updatedStats[index].value;
+    const pointDifference = value - oldValue;
+    
+    if (remainingPoints - pointDifference < 0) {
+      setErrorMessage('Недостаточно очков для повышения характеристики');
+      return;
+    }
+    
     updatedStats[index].value = value;
     setFormData(prev => ({
       ...prev,
@@ -142,10 +152,12 @@ function AttributesStep({ formData, setFormData }) {
       </Typography>
       
       <Alert severity="info" sx={{ mb: 2 }}>
-        Распределите очки между характеристиками. Каждая характеристика должна иметь минимум 1 очко. Максимальное значение характеристики - 10.
+        У вас есть 15 очков для распределения между характеристиками. Каждая характеристика должна иметь минимум 1 очко. Максимальное значение на старте - 4.
       </Alert>
       
-      {/* УДАЛЕНО: Отображение оставшихся очков */}
+      <Typography variant="subtitle1" color="primary" gutterBottom>
+        Оставшиеся очки: {remainingPoints}
+      </Typography>
       
       {errorMessage && (
         <Alert severity="error" sx={{ mb: 2 }}>
@@ -163,7 +175,7 @@ function AttributesStep({ formData, setFormData }) {
                   type="number"
                   value={formData.baseStats[index].value}
                   onChange={(e) => handleStatChange(index, parseInt(e.target.value, 10))}
-                  InputProps={{ inputProps: { min: 1, max: 10 } }}
+                  InputProps={{ inputProps: { min: 1, max: 4 } }}
                   sx={{ width: '80px' }}
                 />
               </Box>
@@ -179,8 +191,7 @@ function AttributesStep({ formData, setFormData }) {
 }
 
 function SkillsStep({ formData, setFormData }) {
-  // Удалено: состояние отслеживания оставшихся очков
-  // const [remainingPoints, setRemainingPoints] = useState(10);
+  const [remainingPoints, setRemainingPoints] = useState(10);
   const [errorMessage, setErrorMessage] = useState('');
 
   // Категории навыков
@@ -223,26 +234,33 @@ function SkillsStep({ formData, setFormData }) {
     ]
   };
 
-  // УДАЛЕНО: Расчет оставшихся очков
-  // useEffect(() => {
-  //  const usedPoints = formData.skills.reduce((sum, skill) => sum + skill.value, 0);
-  //  setRemainingPoints(10 - usedPoints);
-  //  
-  //  if (remainingPoints < 0) {
-  //    setErrorMessage('Вы использовали больше очков, чем доступно');
-  //  } else {
-  //    setErrorMessage('');
-  //  }
-  // }, [formData.skills, remainingPoints]);
+  useEffect(() => {
+    // Расчет оставшихся очков
+    const usedPoints = formData.skills.reduce((sum, skill) => sum + skill.value, 0);
+    setRemainingPoints(10 - usedPoints);
+    
+    if (remainingPoints < 0) {
+      setErrorMessage('Вы использовали больше очков, чем доступно');
+    } else {
+      setErrorMessage('');
+    }
+  }, [formData.skills, remainingPoints]);
 
   const handleSkillChange = (index, value) => {
     // Проверяем, что новое значение в пределах допустимого диапазона
     if (value < 0) value = 0;
-    if (value > 5) value = 5; // Максимальное стартовое значение навыка
+    if (value > 3) value = 3; // Максимальное стартовое значение навыка
     
-    // УДАЛЕНО: Проверка на достаточность очков
-    
+    // Проверяем, достаточно ли очков для изменения
     const updatedSkills = [...formData.skills];
+    const oldValue = updatedSkills[index].value;
+    const pointDifference = value - oldValue;
+    
+    if (remainingPoints - pointDifference < 0) {
+      setErrorMessage('Недостаточно очков для повышения навыка');
+      return;
+    }
+    
     updatedSkills[index].value = value;
     setFormData(prev => ({
       ...prev,
@@ -257,7 +275,11 @@ function SkillsStep({ formData, setFormData }) {
       return;
     }
     
-    // УДАЛЕНО: Проверка на достаточность очков
+    // Проверяем, достаточно ли очков для добавления
+    if (remainingPoints <= 0) {
+      setErrorMessage('Недостаточно очков для добавления нового навыка');
+      return;
+    }
     
     // Добавляем навык с начальным значением 1
     const newSkill = {
@@ -270,8 +292,6 @@ function SkillsStep({ formData, setFormData }) {
       ...prev,
       skills: [...prev.skills, newSkill]
     }));
-    
-    setNewSkill({ name: '', value: 0, category: 'physical' });
   };
 
   const handleRemoveSkill = (index) => {
@@ -290,10 +310,12 @@ function SkillsStep({ formData, setFormData }) {
       </Typography>
       
       <Alert severity="info" sx={{ mb: 2 }}>
-        Выберите начальные навыки персонажа. Вы можете выбрать любые навыки из доступных категорий.
+        У вас есть 10 очков для распределения между навыками. Вы можете выбрать любые навыки из доступных категорий.
       </Alert>
       
-      {/* УДАЛЕНО: Отображение оставшихся очков */}
+      <Typography variant="subtitle1" color="primary" gutterBottom>
+        Оставшиеся очки: {remainingPoints}
+      </Typography>
       
       {errorMessage && (
         <Alert severity="error" sx={{ mb: 2 }}>
@@ -324,7 +346,7 @@ function SkillsStep({ formData, setFormData }) {
                       type="number"
                       value={skill.value}
                       onChange={(e) => handleSkillChange(index, parseInt(e.target.value, 10))}
-                      InputProps={{ inputProps: { min: 1, max: 5 } }}
+                      InputProps={{ inputProps: { min: 1, max: 3 } }}
                       sx={{ width: '60px', mr: 1 }}
                     />
                     <Button 
@@ -365,7 +387,7 @@ function SkillsStep({ formData, setFormData }) {
                   variant="outlined" 
                   size="small"
                   onClick={() => handleAddSkill(skill, category)}
-                  disabled={formData.skills.some(s => s.name === skill)}
+                  disabled={formData.skills.some(s => s.name === skill) || remainingPoints <= 0}
                   sx={{ mb: 1 }}
                 >
                   {skill}
@@ -576,12 +598,14 @@ const CharacterCreate = () => {
       case 0:
         return !!formData.name; // Должно быть указано имя
       case 1:
-        // Все характеристики должны быть не менее 1
+        // Все характеристики должны быть не менее 1 и общая сумма не более 15
+        const totalPoints = formData.baseStats.reduce((sum, stat) => sum + stat.value, 0);
         const allAboveZero = formData.baseStats.every(stat => stat.value >= 1);
-        return allAboveZero;
+        return totalPoints <= 15 && allAboveZero;
       case 2:
-        // УДАЛЕНО: Проверка суммы значений навыков
-        return true;
+        // Сумма значений навыков не должна превышать 10
+        const totalSkillPoints = formData.skills.reduce((sum, skill) => sum + skill.value, 0);
+        return totalSkillPoints <= 10;
       case 3:
         // Должен быть выбран пользователь без персонажа
         const selectedUser = users.find(user => user.id === formData.userId);

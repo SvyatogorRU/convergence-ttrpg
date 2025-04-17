@@ -31,6 +31,11 @@ import CharactersList from './pages/characters/CharactersList';
 import CharacterView from './pages/characters/CharacterView';
 import CharacterCreate from './pages/characters/CharacterCreate';
 
+// Страницы персонажей
+import CharactersList from './pages/characters/CharactersList';
+import CharacterView from './pages/characters/CharacterView';
+import CharacterCreate from './pages/characters/CharacterCreate';
+
 // Заглушки для страниц (будут реализованы позже)
 const CampaignsList = () => <div>Список кампаний (будет реализовано позже)</div>;
 const CampaignDetail = () => <div>Детали кампании (будет реализовано позже)</div>;
